@@ -20,7 +20,21 @@ const quoteSchema = new mongoose.Schema({
 });
 const Quote = mongoose.model('Quote', quoteSchema);
 
-// ...existing code...
+// GET toutes les citations
+app.get('/quotes', async (req, res) => {
+  try {
+    const quotes = await Quote.find();
+    res.json(
+      quotes.map(q => ({
+        id: q._id,
+        text: q.text,
+        createdAt: q.createdAt
+      }))
+    );
+  } catch (err) {
+    res.status(500).json({ error: "Erreur serveur." });
+  }
+});
 
 // GET une citation par ID
 app.get('/quotes/:id', async (req, res) => {
@@ -36,6 +50,25 @@ app.get('/quotes/:id', async (req, res) => {
       id: quote._id,
       text: quote.text,
       createdAt: quote.createdAt
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Erreur serveur." });
+  }
+});
+
+// POST ajouter une nouvelle citation
+app.post('/quotes', async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text) {
+      return res.status(400).json({ error: "Le champ 'text' est requis." });
+    }
+    const newQuote = new Quote({ text });
+    await newQuote.save();
+    res.status(201).json({
+      id: newQuote._id,
+      text: newQuote.text,
+      createdAt: newQuote.createdAt
     });
   } catch (err) {
     res.status(500).json({ error: "Erreur serveur." });
@@ -69,8 +102,6 @@ app.delete('/quotes/:id', async (req, res) => {
     res.status(500).json({ error: "Erreur serveur." });
   }
 });
-
-// ...existing code...
 
 app.listen(port, () => {
   console.log(`API DailyQuotes en écoute sur http://localhost:${port}`);
